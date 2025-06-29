@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"os"
-	"strings"
 
 	"student-portal/config"
 	"student-portal/controllers"
@@ -32,45 +31,34 @@ func main() {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
-	// Initialize Gin router
+	// Set Gin to release mode in production
 	if os.Getenv("ENVIRONMENT") == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
 	r := gin.Default()
 
-	// Configure CORS
-	allowedOrigins := []string{"http://localhost:3000"}
-	if frontendURL := os.Getenv("FRONTEND_URL"); frontendURL != "" {
-		allowedOrigins = append(allowedOrigins, frontendURL)
-	}
-	if origins := os.Getenv("ALLOWED_ORIGINS"); origins != "" {
-		allowedOrigins = append(allowedOrigins, strings.Split(origins, ",")...)
-	}
-
+	// ✅ Hardcoded CORS: Only allow your Vercel frontend
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     allowedOrigins,
+		AllowOrigins:     []string{"https://student-portal-m4.vercel.app"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
 
-	// Public routes (no authentication required)
+	// Public routes
 	api := r.Group("/api")
 	{
-		// Auth routes
 		api.POST("/auth/signup", controllers.Signup)
 		api.POST("/auth/login", controllers.Login)
 	}
 
-	// Protected routes (authentication required)
+	// Protected routes
 	protected := api.Group("/")
 	protected.Use(middleware.AuthMiddleware())
 	{
-		// User profile
 		protected.GET("/auth/profile", controllers.GetProfile)
-
-		// Student routes
 		protected.GET("/students", controllers.GetAllStudents)
 		protected.GET("/students/department/:department", controllers.GetStudentsByDepartment)
 		protected.POST("/students", controllers.CreateStudent)
@@ -78,14 +66,13 @@ func main() {
 		protected.DELETE("/students/:id", controllers.DeleteStudent)
 	}
 
-	// Get port from environment or use default
+	// Set port
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
 	log.Printf("Server starting on port %s", port)
-	log.Printf("Allowed origins: %v", allowedOrigins)
 	if err := r.Run(":" + port); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
