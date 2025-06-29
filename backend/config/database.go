@@ -19,9 +19,18 @@ func InitDB() (*gorm.DB, error) {
 	password := getEnv("DB_PASSWORD", "password")
 	dbname := getEnv("DB_NAME", "student_portal")
 
+	// Determine SSL mode based on environment
+	sslMode := "disable"
+	if os.Getenv("ENVIRONMENT") == "production" || os.Getenv("DATABASE_URL") != "" {
+		sslMode = "require"
+	}
+
 	// Create connection string
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=UTC",
-		host, port, user, password, dbname)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s TimeZone=UTC",
+		host, port, user, password, dbname, sslMode)
+
+	log.Printf("Connecting to database: host=%s, port=%s, user=%s, dbname=%s, sslmode=%s",
+		host, port, user, dbname, sslMode)
 
 	// Open database connection
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
