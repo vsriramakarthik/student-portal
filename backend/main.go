@@ -40,7 +40,7 @@ func main() {
 
 	// ✅ Hardcoded CORS: Only allow your Vercel frontend
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://student-portal-m4.vercel.app"},
+		AllowOrigins:     []string{"https://student-portal-m4-7n2owjviy.vercel.app"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
